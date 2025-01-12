@@ -6,19 +6,16 @@ from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-# Initialize FastAPI app
 app = FastAPI()
 
-# Enable CORS for all origins (everyone can access the API)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow any origin to access the API
+    allow_origins=["*"],  
     allow_credentials=True,
-    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
-    allow_headers=["*"],  # Allow all headers
+    allow_methods=["*"],  
+    allow_headers=["*"],  
 )
 
-# Define the input model for the request body
 class ModelInput(BaseModel):
     N: int
     P: int
@@ -28,17 +25,15 @@ class ModelInput(BaseModel):
     ph: float
     rainfall: float
 
-# Load the model from a pickle file
+
 with gzip.open('model1.pkl.gz', 'rb') as f:
     model = pickle.load(f)
 
-# Prediction endpoint
 @app.post('/predict')
 def prediction(input_param: ModelInput):
     # Convert input to dictionary
     input_data = input_param.dict()
 
-    # Extract features for the model
     nitrogen = input_data['N']
     phosphorous = input_data['P']
     potassium = input_data['K']
@@ -47,13 +42,10 @@ def prediction(input_param: ModelInput):
     phv = input_data['ph']
     rain = input_data['rainfall']
 
-    # Prepare input for model prediction
     input_list = [nitrogen, phosphorous, potassium, temp, humid, phv, rain]
 
-    # Get the model's prediction
     prediction = model.predict([input_list])
 
-    # Mapping of model prediction to crop names
     crop_map = {
         1: 'apple',
         2: 'banana',
@@ -79,13 +71,11 @@ def prediction(input_param: ModelInput):
         22: 'watermelon'
     }
 
-    # Get the predicted crop name
+    
     predicted_crop = crop_map.get(prediction[0], "Unknown crop")
 
-    # Return the prediction as a JSON response
     return JSONResponse(content={"predicted_crop": predicted_crop})
 
-# Root endpoint
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the Crop Recommendation API"}
